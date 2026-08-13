@@ -1,0 +1,13 @@
+.{
+    .name = .dewasm_pozeiden_shim,
+    .version = "0.1.0",
+    .minimum_zig_version = "0.16.0",
+    .fingerprint = 0x586f04d2e697a7fd,
+    .dependencies = .{
+        .pozeiden = .{
+            .url = "git+https://github.com/sc2in/pozeiden#071fbbb85fb73a06994c163c6093123bd3ac11f6",
+            .hash = "pozeiden-0.4.1-NAqiXUkfCwBbeMXQus5ba8zxE3oEyZtnD_OtL_35qKi8",
+        },
+    },
+    .paths = .{ "build.zig", "build.zig.zon", "src" },
+}
