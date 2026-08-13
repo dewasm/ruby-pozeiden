@@ -1,0 +1,7 @@
+/wasm/.zig-cache/
+/wasm/zig-out/
+*.wasm
+/lib/dewasm/pozeiden/wasm_module.rb
+/pkg/
+*.gem
+/wasm/zig-pkg/
