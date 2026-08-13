@@ -1,0 +1,168 @@
+# dewasm-pozeiden
+
+Mermaid diagram rendering in pure Ruby.
+
+[pozeiden](https://github.com/sc2in/pozeiden) is a mermaid renderer written in Zig.
+This gem compiles it to `wasm32-wasi` and converts that WebAssembly module to Ruby source with [dewasm](https://github.com/dewasm/dewasm), so rendering runs on plain Ruby.
+There is no native extension, no JavaScript, no headless browser, and no runtime dependency outside the standard library.
+
+Seventeen diagram types are supported, from the diagram types pozeiden implements: pie, flowchart, sequence, gitgraph, class, state, er, gantt, timeline, xychart, quadrant, mindmap, sankey, c4, block, requirement, and kanban.
+
+## Install
+
+```console
+$ gem install dewasm-pozeiden
+```
+
+```ruby
+gem "dewasm-pozeiden"
+```
+
+Ruby 3.4 or newer is required, because the converted module stores WebAssembly linear memory in an `IO::Buffer`.
+
+## Usage
+
+Render a diagram to an SVG string:
+
+```ruby
+require "dewasm/pozeiden"
+
+svg = Dewasm::Pozeiden.render(<<~MERMAID)
+  flowchart LR
+    A[Start] --> B{Choice}
+    B --> C[End]
+MERMAID
+
+File.write("flowchart.svg", svg)
+```
+
+Unrecognised input renders pozeiden's fallback SVG and counts as success.
+Pass `strict: true` to get an error instead:
+
+```ruby
+Dewasm::Pozeiden.render("this is not a diagram at all")
+# => "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" height=\"120\"> ..."
+
+Dewasm::Pozeiden.render("this is not a diagram at all", strict: true)
+# raises Dewasm::Pozeiden::Error: pozeiden returned error.UnknownDiagramType
+```
+
+`render_with_metadata` also returns the detected diagram type and the accessibility metadata declared in the source:
+
+```ruby
+result = Dewasm::Pozeiden.render_with_metadata(<<~MERMAID)
+  flowchart LR
+    accTitle: Build pipeline
+    accDescr: How a build flows
+    A --> B
+MERMAID
+
+result.diagram_type   # => :flowchart
+result.title          # => "Build pipeline"
+result.descr          # => "How a build flows"
+result.svg            # => "<svg ...>"
+```
+
+`detect_diagram_type` classifies the source without rendering it:
+
+```ruby
+Dewasm::Pozeiden.detect_diagram_type("pie title Pets\n")   # => :pie
+Dewasm::Pozeiden.detect_diagram_type("nothing here\n")     # => :unknown
+```
+
+Rendering options are keyword arguments of `render` and `render_with_metadata`:
+
+```ruby
+Dewasm::Pozeiden.render(source, max_width: 800, theme_override: { node_fill: "#ffe4b5" })
+```
+
+| Keyword | Meaning |
+| --- | --- |
+| `strict:` | Raise on unrecognised input instead of rendering the fallback SVG. Default `false`. |
+| `max_width:` | Scale the SVG so its width does not exceed this many user units. `0` disables. |
+| `max_height:` | Scale the SVG so its height does not exceed this many user units. `0` disables. |
+| `scale:` | Uniform scale factor for the SVG `viewBox`, ignored when `max_width` or `max_height` is set. |
+| `theme_override:` | Theme values to override for this call. |
+| `random:` | Source of random bytes for the module's `random_get` import, anything responding to `bytes(count)`. Default `Random`. |
+
+The accepted `theme_override` keys are pozeiden's `ThemeOverride` fields: `background`, `text_color`, `node_fill`, `node_stroke`, `edge_color`, `font_size`, `font_size_small`, and `font_family`.
+The first five and the last take a string, the two font sizes take an integer.
+Any other key raises `Dewasm::Pozeiden::Error` with `zig_error` `:UnknownField`; unknown keys are never ignored.
+
+Errors that pozeiden itself reports carry its Zig error name:
+
+```ruby
+begin
+  Dewasm::Pozeiden.render(source, strict: true)
+rescue Dewasm::Pozeiden::Error => e
+  e.zig_error   # => :UnknownDiagramType
+end
+```
+
+Input larger than 4 MiB raises `Dewasm::Pozeiden::Error` before the WebAssembly module is called.
+That is the size of the module's input buffer, chosen to match pozeiden's own `max_input_bytes` default.
+
+## API
+
+Every call instantiates the converted module, runs, and drops it.
+WebAssembly linear memory is not retained between calls, so no state carries over from one render to the next.
+
+| Ruby | pozeiden |
+| --- | --- |
+| `Dewasm::Pozeiden.render(text, **options)` | `renderWithOptions(allocator, text, RenderOptions)` |
+| `Dewasm::Pozeiden.render_with_metadata(text, **options)` | `renderWithMetadata(allocator, text, RenderOptions)` |
+| `Dewasm::Pozeiden.detect_diagram_type(text)` | `detectDiagramType(text)` |
+| `Dewasm::Pozeiden::RenderResult` | `RenderResult` |
+| `Dewasm::Pozeiden::Error#zig_error` | the `@errorName` of the returned error |
+| `Dewasm::Pozeiden::POZEIDEN_VERSION` | the pinned upstream revision |
+
+`Dewasm::Pozeiden.render` maps to `renderWithOptions` rather than to the two-argument `render`, because the options are always sent; the defaults are pozeiden's own, so `Dewasm::Pozeiden.render(text)` renders what `render(allocator, text)` renders.
+
+## Measured numbers
+
+On an Apple M4 Pro with Ruby 4.0.4:
+
+| Quantity | Value |
+| --- | --- |
+| WebAssembly module | 468 KiB |
+| Generated Ruby (`lib/dewasm/pozeiden/wasm_module.rb`) | 2.4 MiB |
+| Packaged gem | 358 KiB |
+| `require "dewasm/pozeiden"` | 0.34 s |
+| First render | 6 ms |
+| Later renders (small flowchart) | 5 ms |
+| Resident memory after a render | 122 MiB |
+
+Resident memory is dominated by the 33 MiB of linear memory each instance allocates, which holds the 4 MiB input buffer, the 8 MiB scratch arena, and the 4 MiB output buffer.
+
+Rendering is deterministic: two renders of the same source produce byte-identical SVGs, both with the default random source and with a fixed one.
+
+## Building and regenerating
+
+The generated Ruby is not committed.
+Building it needs Zig 0.16, `wasm-opt` (Binaryen), and a dewasm binary.
+
+```console
+$ rake wasm:build   # zig build, then wasm-opt -Oz
+$ rake generate     # dewasm: wasm/pozeiden.wasm -> lib/dewasm/pozeiden/wasm_module.rb
+$ rake test         # depends on generate
+```
+
+`wasm/` is a self-contained Zig project.
+It depends on pozeiden pinned by commit in `wasm/build.zig.zon`, fetched by the Zig package manager into the gitignored `wasm/zig-pkg/`; `wasm/src/shim.zig` is this project's own WebAssembly interface over pozeiden's public API and is not upstream's playground shim.
+The module is built for `wasm32-wasi` in `ReleaseSmall`, single threaded, with the entry point disabled and `rdynamic` set, then post-processed with `wasm-opt -Oz --enable-bulk-memory --enable-sign-ext --enable-nontrapping-float-to-int`.
+
+`rake generate` runs the dewasm binary from `DEWASM_BIN`, defaulting to `../dewasm/target/release/dewasm`.
+The dewasm revision this gem is built and tested against is in `DEWASM_REVISION`.
+
+Pinned upstream revisions:
+
+| Component | Revision |
+| --- | --- |
+| pozeiden | `071fbbb85fb73a06994c163c6093123bd3ac11f6` (0.4.1) |
+| dewasm | `1fb0376506cf7046fc1ba4b7c73f77ee59eccc08` |
+
+## License
+
+This gem is distributed under the [PolyForm Noncommercial License 1.0.0](LICENSE), the license of pozeiden, whose code it contains in compiled and converted form.
+Commercial use is not permitted under this license.
+The required notice is preserved in `LICENSE`: Copyright © 2025 Star City Security Consulting, LLC (SC2).
