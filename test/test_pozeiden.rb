@@ -77,6 +77,11 @@ class TestPozeiden < Minitest::Test
     assert_includes error.message, "over the #{Dewasm::Pozeiden::MAX_INPUT_BYTES} byte limit"
   end
 
+  def test_max_input_bytes_matches_the_buffer_compiled_into_the_module
+    instance = Dewasm::Pozeiden::WasmModule.new
+    assert_equal Dewasm::Pozeiden::MAX_INPUT_BYTES, instance.invoke("input_capacity")
+  end
+
   def test_theme_override_changes_the_rendered_colors
     svg = Dewasm::Pozeiden.render(DIAGRAMS[:flowchart], theme_override: { node_fill: "#ff0000" })
     assert_includes svg, "#ff0000"
