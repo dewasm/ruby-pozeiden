@@ -36,6 +36,11 @@ task :generate do
      "-o", GENERATED_FILE
 end
 
+desc "Measure sizes, memory, and speed, and rewrite the table in README.md"
+task measure: :generate do
+  sh RbConfig.ruby, "tools/measure.rb"
+end
+
 Rake::TestTask.new(test: :generate) do |t|
   t.libs = ["lib", "test"]
   t.test_files = FileList["test/**/test_*.rb"]
