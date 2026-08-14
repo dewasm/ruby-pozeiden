@@ -2,6 +2,10 @@
 
 **Mermaid** diagram rendering in **pure Ruby**.
 
+> [!NOTE]
+> This gem cannot be used commercially: the rendering core derives from pozeiden, which is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE-POZEIDEN).
+> The MIT licensed [dewasm-merman](https://github.com/dewasm/ruby-merman) covers more diagram types, but is much larger.
+
 [pozeiden](https://github.com/sc2in/pozeiden) is a mermaid renderer written in Zig.
 This gem compiles it to `wasm32-wasi` and converts that WebAssembly module to Ruby source with [dewasm](https://github.com/dewasm/dewasm), so rendering runs on plain Ruby.
 There is *no browser*, *no native extension*, and *no wasm runtime* involved: the gem is Ruby code that a stock `ruby` executes.
@@ -9,7 +13,6 @@ There is *no browser*, *no native extension*, and *no wasm runtime* involved: th
 The gem is built from pozeiden 0.4.1 at commit `071fbbb85fb73a06994c163c6093123bd3ac11f6`, pinned in `wasm/build.zig.zon` and surfaced as `Dewasm::Pozeiden::POZEIDEN_VERSION`.
 
 Seventeen diagram types are supported, the ones pozeiden implements: pie, flowchart, sequence, gitgraph, class, state, er, gantt, timeline, xychart, quadrant, mindmap, sankey, c4, block, requirement, and kanban.
-[dewasm-merman](https://github.com/dewasm/ruby-merman) covers more diagram types, but is much larger.
 
 ## Install
 
