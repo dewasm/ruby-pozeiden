@@ -224,6 +224,6 @@ It needs nothing.
 
 ## License
 
-This gem is distributed under the [PolyForm Noncommercial License 1.0.0](LICENSE), the license of pozeiden, whose code it contains in compiled and converted form.
-Commercial use is not permitted under this license.
-The required notice is preserved in `LICENSE`: Copyright © 2025 Star City Security Consulting, LLC (SC2).
+The code in this repository (the shim, the wrapper, the tools, and the tests) is Copyright (c) 2026 Hiroya Fujinami, under the [MIT License](LICENSE).
+The generated `wasm_module.rb` derives from pozeiden and stays under the [PolyForm Noncommercial License 1.0.0](LICENSE-POZEIDEN), whose required notice is preserved there: Copyright © 2025 Star City Security Consulting, LLC (SC2).
+Every render runs that module, so use of the gem as a whole is bound by the noncommercial restriction.
