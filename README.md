@@ -9,7 +9,7 @@ There is *no browser*, *no native extension*, and *no wasm runtime* involved: th
 The gem is built from pozeiden 0.4.1 at commit `071fbbb85fb73a06994c163c6093123bd3ac11f6`, pinned in `wasm/build.zig.zon` and surfaced as `Dewasm::Pozeiden::POZEIDEN_VERSION`.
 
 Seventeen diagram types are supported, the ones pozeiden implements: pie, flowchart, sequence, gitgraph, class, state, er, gantt, timeline, xychart, quadrant, mindmap, sankey, c4, block, requirement, and kanban.
-[dewasm-merman](https://github.com/dewasm/ruby-merman) covers more diagram types at a much larger size, built the same way from a Rust implementation.
+[dewasm-merman](https://github.com/dewasm/ruby-merman) covers more diagram types at a much larger size.
 
 ## Install
 
