@@ -184,8 +184,8 @@ It needs Zig 0.16 and `wasm-opt` from Binaryen.
 $ rake generate
 ```
 
-Runs dewasm over that module into `lib/dewasm/pozeiden/wasm_module.rb`.
-It needs `wasm/pozeiden.wasm`, and a dewasm binary whose path comes from `DEWASM_BIN`, defaulting to `../dewasm/target/release/dewasm`.
+Converts that module into the Ruby the gem ships.
+It needs `wasm/pozeiden.wasm`, and a dewasm binary, its path in `DEWASM_BIN`.
 
 ### `rake test`
 
@@ -202,10 +202,8 @@ It needs `rake generate`.
 $ rake measure
 ```
 
-Measures sizes, memory, and speed on the machine it runs on, and rewrites the block between the `measurements` markers in `README.md`.
+Refreshes the measurements table in `README.md` with numbers from this machine.
 It needs `rake generate`, and a built gem in the checkout for the `.gem` row.
-Each timing it reports is a warmup call followed by the median of three measured runs; the sizes come from `File.size`, and the resident memory from `ps` on a child process that has just required the module.
-The measurement itself is `tools/measure.rb`, which can also be run directly as `ruby tools/measure.rb` when the build products are already in place, and which rewrites the same block.
 
 ### `rake build`
 
