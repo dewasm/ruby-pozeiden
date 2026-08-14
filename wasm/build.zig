@@ -25,7 +25,7 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    // The host calls the exported functions directly, so there is no _start, and the exports must survive dead-code stripping.
+    // The shim is a reactor: the host calls the exported functions directly, so there is no _start, and rdynamic keeps the exports alive through dead-code stripping.
     exe.entry = .disabled;
     exe.rdynamic = true;
 
