@@ -27,8 +27,7 @@ task :generate do
   raise "dewasm binary not found at #{DEWASM_BIN}; set DEWASM_BIN" unless File.executable?(DEWASM_BIN)
   raise "#{WASM_FILE} not found; run rake wasm:build" unless File.exist?(WASM_FILE)
 
-  # The dewasm binary does not report its source revision, so the pinned
-  # revision is stated here and checked by the reader, not by this task.
+  # The dewasm binary does not report its source revision, so the pinned revision is stated here and checked by the reader, not by this task.
   puts "dewasm binary: #{DEWASM_BIN} (pinned revision #{DEWASM_REVISION})"
   sh DEWASM_BIN, WASM_FILE,
      "--target", "ruby",

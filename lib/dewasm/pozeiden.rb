@@ -6,11 +6,9 @@ require_relative "pozeiden/version"
 require_relative "pozeiden/wasm_module"
 
 module Dewasm
-  # Mermaid diagram rendering by the pozeiden renderer, compiled to
-  # WebAssembly and converted to Ruby by dewasm.
+  # Mermaid diagram rendering by the pozeiden renderer, compiled to WebAssembly and converted to Ruby by dewasm.
   module Pozeiden
-    # Raised when pozeiden returns a Zig error, and for input this gem rejects
-    # before calling into the WebAssembly module.
+    # Raised when pozeiden returns a Zig error, and for input this gem rejects before calling into the WebAssembly module.
     class Error < StandardError
       # The `@errorName` reported by pozeiden, or nil for a local rejection.
       attr_reader :zig_error
@@ -23,21 +21,19 @@ module Dewasm
 
     RenderResult = Data.define(:svg, :diagram_type, :title, :descr)
 
-    # The input buffer compiled into the WebAssembly module, which is also
-    # pozeiden's own `max_input_bytes` default.
+    # The input buffer compiled into the WebAssembly module, which is also pozeiden's own `max_input_bytes` default.
     MAX_INPUT_BYTES = 4 * 1024 * 1024
 
     module_function
 
-    # Render mermaid text to a self-contained SVG string.
+    # The SVG is self-contained.
     def render(text, strict: false, max_width: 0, max_height: 0, scale: 1.0, theme_override: {}, random: Random)
       options = options_json(strict:, max_width:, max_height:, scale:, theme_override:)
       instance, length = call("render", text, options, random:)
       read_output(instance, length)
     end
 
-    # Render mermaid text and return the SVG along with the diagram type and
-    # the accessibility metadata pozeiden extracted from the source.
+    # The metadata is the diagram type and the accessibility title and description pozeiden extracted from the source.
     def render_with_metadata(text, strict: false, max_width: 0, max_height: 0, scale: 1.0, theme_override: {}, random: Random)
       options = options_json(strict:, max_width:, max_height:, scale:, theme_override:)
       instance, length = call("render_with_metadata", text, options, random:)
@@ -49,7 +45,6 @@ module Dewasm
       )
     end
 
-    # Detect the diagram type of mermaid text without rendering it.
     # Unrecognised input is `:unknown`.
     def detect_diagram_type(text)
       instance, = call("detect", text, nil, random: Random)
@@ -128,8 +123,7 @@ module Dewasm
     end
     private_class_method :raise_zig_error
 
-    # Exported i32 results arrive masked unsigned, so the error sentinel needs
-    # the signed reading.
+    # Exported i32 results arrive masked unsigned, so the error sentinel needs the signed reading.
     def signed(value)
       value >= 0x8000_0000 ? value - 0x1_0000_0000 : value
     end

@@ -25,7 +25,6 @@ class TestPozeiden < Minitest::Test
     end
   end
 
-  # A class diagram used to convert into code that produced the fallback SVG.
   def test_class_diagram_renders_the_declared_members
     svg = Dewasm::Pozeiden.render(DIAGRAMS[:class])
     assert_includes svg, ">Animal<"
