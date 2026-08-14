@@ -1,20 +1,23 @@
 # dewasm-pozeiden
 
-Mermaid diagram rendering in pure Ruby.
+**Mermaid** diagram rendering in **pure Ruby**.
 
 [pozeiden](https://github.com/sc2in/pozeiden) is a mermaid renderer written in Zig.
 This gem compiles it to `wasm32-wasi` and converts that WebAssembly module to Ruby source with [dewasm](https://github.com/dewasm/dewasm), so rendering runs on plain Ruby.
-There is no native extension, no JavaScript, no headless browser, and no runtime dependency outside the standard library.
+There is *no browser*, *no native extension*, and *no wasm runtime* involved: the gem is Ruby code that a stock `ruby` executes.
 
 The gem is built from pozeiden 0.4.1 at commit `071fbbb85fb73a06994c163c6093123bd3ac11f6`, pinned in `wasm/build.zig.zon` and surfaced as `Dewasm::Pozeiden::POZEIDEN_VERSION`.
 
-Seventeen diagram types are supported, from the diagram types pozeiden implements: pie, flowchart, sequence, gitgraph, class, state, er, gantt, timeline, xychart, quadrant, mindmap, sankey, c4, block, requirement, and kanban.
+Seventeen diagram types are supported, the ones pozeiden implements: pie, flowchart, sequence, gitgraph, class, state, er, gantt, timeline, xychart, quadrant, mindmap, sankey, c4, block, requirement, and kanban.
+[dewasm-merman](https://github.com/dewasm/ruby-merman) covers more diagram types at a much larger size, built the same way from a Rust implementation.
 
 ## Install
 
 ```console
 $ gem install dewasm-pozeiden
 ```
+
+Or in `Gemfile`:
 
 ```ruby
 gem "dewasm-pozeiden"
@@ -132,15 +135,43 @@ Neither build product is committed: `wasm/pozeiden.wasm` and `lib/dewasm/pozeide
 The Rakefile drives everything.
 `rake generate` does not build the WebAssembly module itself, so a clean checkout runs `rake wasm:build` first; from there `rake test` runs what it needs.
 
-| Task | What it does | What it needs |
-| --- | --- | --- |
-| `rake wasm:build` | Builds `wasm/` with `zig build` and post-processes it into `wasm/pozeiden.wasm` with `wasm-opt -Oz`. | Zig 0.16 and `wasm-opt` from Binaryen. |
-| `rake generate` | Runs dewasm over that module into `lib/dewasm/pozeiden/wasm_module.rb`. | `wasm/pozeiden.wasm`, and a dewasm binary whose path comes from `DEWASM_BIN`, defaulting to `../dewasm/target/release/dewasm`. |
-| `rake test` | Runs `test/` against the generated module. | `rake generate`. |
-| `rake measure` | Measures sizes, memory, and speed on the machine it runs on, and rewrites the block between the `measurements` markers in `README.md`. | `rake generate`, and a built gem in the checkout for the `.gem` row. |
+### `rake wasm:build`
 
-`rake measure` runs `tools/measure.rb`, which can also be run directly as `ruby tools/measure.rb` when the build products are already in place.
+```console
+$ rake wasm:build
+```
+
+Builds `wasm/` with `zig build` and post-processes it into `wasm/pozeiden.wasm` with `wasm-opt -Oz`.
+It needs Zig 0.16 and `wasm-opt` from Binaryen.
+
+### `rake generate`
+
+```console
+$ rake generate
+```
+
+Runs dewasm over that module into `lib/dewasm/pozeiden/wasm_module.rb`.
+It needs `wasm/pozeiden.wasm`, and a dewasm binary whose path comes from `DEWASM_BIN`, defaulting to `../dewasm/target/release/dewasm`.
+
+### `rake test`
+
+```console
+$ rake test
+```
+
+Runs `test/` against the generated module.
+It needs `rake generate`.
+
+### `rake measure`
+
+```console
+$ rake measure
+```
+
+Measures sizes, memory, and speed on the machine it runs on, and rewrites the block between the `measurements` markers in `README.md`.
+It needs `rake generate`, and a built gem in the checkout for the `.gem` row.
 Each timing it reports is a warmup call followed by the median of three measured runs; the sizes come from `File.size`, and the resident memory from `ps` on a child process that has just required the module.
+The measurement itself is `tools/measure.rb`, which can also be run directly as `ruby tools/measure.rb` when the build products are already in place, and which rewrites the same block.
 
 ## Size, memory, and speed
 
@@ -171,8 +202,6 @@ Each call allocates the module's linear memory, which holds the 4 MiB input buff
 Rendering is deterministic: two renders of the same source produce byte-identical SVGs, both with the default random source and with a fixed one.
 
 The numbers move with the pinned pozeiden commit and with the dewasm revision used to generate the module, so rerun `rake measure` after changing either.
-
-If this renderer's diagram coverage is not enough, [dewasm-merman](https://github.com/dewasm/ruby-merman) is a larger Mermaid renderer built the same way, from a Rust implementation covering more diagram types at a much larger size.
 
 ## License
 
