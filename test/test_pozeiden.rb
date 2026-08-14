@@ -10,7 +10,8 @@ class TestPozeiden < Minitest::Test
     sequence: "sequenceDiagram\n  Alice->>Bob: Hello\n  Bob-->>Alice: Hi\n",
     class: "classDiagram\n  class Animal {\n    +String name\n    +eat()\n  }\n  Animal <|-- Dog\n",
     state: "stateDiagram-v2\n  [*] --> Idle\n  Idle --> Running\n  Running --> [*]\n",
-    gantt: "gantt\n  title Plan\n  section Work\n  Design :a1, 2026-01-01, 3d\n  Build :after a1, 5d\n",
+    gantt:
+      "gantt\n  title Plan\n  section Work\n  Design :a1, 2026-01-01, 3d\n  Build :after a1, 5d\n",
     mindmap: "mindmap\n  root((core))\n    first\n    second\n",
     gitgraph: "gitGraph\n  commit\n  branch develop\n  commit\n  checkout main\n  merge develop\n"
   }.freeze
@@ -38,9 +39,10 @@ class TestPozeiden < Minitest::Test
   end
 
   def test_strict_mode_raises_for_nonsense
-    error = assert_raises(Dewasm::Pozeiden::Error) do
-      Dewasm::Pozeiden.render("this is not a diagram at all", strict: true)
-    end
+    error =
+      assert_raises(Dewasm::Pozeiden::Error) do
+        Dewasm::Pozeiden.render("this is not a diagram at all", strict: true)
+      end
     assert_equal :UnknownDiagramType, error.zig_error
   end
 
@@ -87,9 +89,10 @@ class TestPozeiden < Minitest::Test
   end
 
   def test_unknown_theme_override_key_is_an_error
-    error = assert_raises(Dewasm::Pozeiden::Error) do
-      Dewasm::Pozeiden.render(DIAGRAMS[:flowchart], theme_override: { nope: "#ff0000" })
-    end
+    error =
+      assert_raises(Dewasm::Pozeiden::Error) do
+        Dewasm::Pozeiden.render(DIAGRAMS[:flowchart], theme_override: { nope: "#ff0000" })
+      end
     assert_equal :UnknownField, error.zig_error
   end
 

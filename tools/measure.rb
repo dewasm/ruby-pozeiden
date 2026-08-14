@@ -50,13 +50,7 @@ module Measure
 
   def block
     table = rows.map { |name, value| "| #{name} | #{value} |" }
-    [
-      "Measured on #{machine}.",
-      "",
-      "| Quantity | Value |",
-      "| --- | --- |",
-      *table
-    ].join("\n")
+    ["Measured on #{machine}.", "", "| Quantity | Value |", "| --- | --- |", *table].join("\n")
   end
 
   def rewrite_readme
@@ -118,7 +112,7 @@ module Measure
   end
 
   def run_ruby(script)
-    Tempfile.create(["measure", ".rb"]) do |file|
+    Tempfile.create(%w[measure .rb]) do |file|
       file.write(script)
       file.flush
       output = IO.popen([RbConfig.ruby, "-Ilib", file.path], &:read)
@@ -160,15 +154,22 @@ module Measure
   end
 
   def bytes(size)
-    size < 1_000_000 ? format("%d KB", (size / 1000.0).round) : format("%.1f MB", size / 1_000_000.0)
+    if size < 1_000_000
+      format("%d KB", (size / 1000.0).round)
+    else
+      format("%.1f MB", size / 1_000_000.0)
+    end
   end
 
   # A call below a millisecond still has to read as a number, so the sub-millisecond range keeps one decimal.
   def seconds(elapsed)
     case elapsed
-    when ...0.01 then format("%.1f ms", elapsed * 1000)
-    when ...1.0 then format("%d ms", (elapsed * 1000).round)
-    else format("%.1f s", elapsed)
+    when ...0.01
+      format("%.1f ms", elapsed * 1000)
+    when ...1.0
+      format("%d ms", (elapsed * 1000).round)
+    else
+      format("%.1f s", elapsed)
     end
   end
 end

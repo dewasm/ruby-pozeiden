@@ -27,14 +27,30 @@ module Dewasm
     module_function
 
     # The SVG is self-contained.
-    def render(text, strict: false, max_width: 0, max_height: 0, scale: 1.0, theme_override: {}, random: Random)
+    def render(
+      text,
+      strict: false,
+      max_width: 0,
+      max_height: 0,
+      scale: 1.0,
+      theme_override: {},
+      random: Random
+    )
       options = options_json(strict:, max_width:, max_height:, scale:, theme_override:)
       instance, length = call("render", text, options, random:)
       read_output(instance, length)
     end
 
     # The metadata is the diagram type and the accessibility title and description pozeiden extracted from the source.
-    def render_with_metadata(text, strict: false, max_width: 0, max_height: 0, scale: 1.0, theme_override: {}, random: Random)
+    def render_with_metadata(
+      text,
+      strict: false,
+      max_width: 0,
+      max_height: 0,
+      scale: 1.0,
+      theme_override: {},
+      random: Random
+    )
       options = options_json(strict:, max_width:, max_height:, scale:, theme_override:)
       instance, length = call("render_with_metadata", text, options, random:)
       RenderResult.new(
@@ -54,8 +70,9 @@ module Dewasm
     def call(export, text, options, random:)
       bytes = String(text).b
       if bytes.bytesize > MAX_INPUT_BYTES
-        raise Error, "input is #{bytes.bytesize} bytes, over the #{MAX_INPUT_BYTES} byte limit " \
-                     "compiled into the WebAssembly module (pozeiden's own max_input_bytes default)"
+        raise Error,
+              "input is #{bytes.bytesize} bytes, over the #{MAX_INPUT_BYTES} byte limit " \
+                "compiled into the WebAssembly module (pozeiden's own max_input_bytes default)"
       end
 
       instance = instantiate(random)
@@ -75,11 +92,14 @@ module Dewasm
 
     def instantiate(random)
       holder = {}
-      random_get = lambda do |buf_ptr, len|
-        write(holder[:instance], buf_ptr, random.bytes(len).b)
-        0
-      end
-      holder[:instance] = WasmModule.new({ "wasi_snapshot_preview1" => { "random_get" => random_get } })
+      random_get =
+        lambda do |buf_ptr, len|
+          write(holder[:instance], buf_ptr, random.bytes(len).b)
+          0
+        end
+      holder[:instance] = WasmModule.new(
+        { "wasi_snapshot_preview1" => { "random_get" => random_get } }
+      )
     end
     private_class_method :instantiate
 
@@ -101,7 +121,10 @@ module Dewasm
     private_class_method :write
 
     def read_output(instance, length)
-      instance.memory.read_string(instance.invoke("get_output_ptr"), length).force_encoding(Encoding::UTF_8)
+      instance
+        .memory
+        .read_string(instance.invoke("get_output_ptr"), length)
+        .force_encoding(Encoding::UTF_8)
     end
     private_class_method :read_output
 
