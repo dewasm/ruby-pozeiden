@@ -41,6 +41,18 @@ task measure: :generate do
   sh RbConfig.ruby, "tools/measure.rb"
 end
 
+desc "Build the gem"
+task build: :generate do
+  sh "gem", "build", "dewasm-pozeiden.gemspec"
+end
+
+desc "Remove build products"
+task :clean do
+  rm_f [WASM_FILE, GENERATED_FILE]
+  rm_rf File.join(WASM_DIR, "zig-out")
+  rm_rf File.join(WASM_DIR, ".zig-cache")
+end
+
 Rake::TestTask.new(test: :generate) do |t|
   t.libs = ["lib", "test"]
   t.test_files = FileList["test/**/test_*.rb"]

@@ -130,6 +130,36 @@ The module is built for `wasm32-wasi` in `ReleaseSmall`, single threaded, with t
 
 Neither build product is committed: `wasm/pozeiden.wasm` and `lib/dewasm/pozeiden/wasm_module.rb` are produced by the build, and the generated Ruby is shipped in the gem.
 
+## Size, memory, and speed
+
+<!-- measurements:begin -->
+Measured on macOS 26.5.2, Apple M1 Pro, Ruby 4.0.4.
+
+| Quantity | Value |
+| --- | --- |
+| `wasm/pozeiden.wasm` after `wasm-opt -Oz` | 479 KB |
+| Generated `wasm_module.rb` | 2.6 MB |
+| Packaged `.gem` | 366 KB |
+| `require "dewasm/pozeiden"` | 381 ms |
+| Resident memory after `require` | 126.6 MB |
+| `render`, flowchart | 5.2 ms |
+| `render`, pie chart | 38 ms |
+| `render_with_metadata`, flowchart | 4.3 ms |
+| `detect_diagram_type` | 0.4 ms |
+<!-- measurements:end -->
+
+The rows fall into three groups.
+The first ones are what ships: the WebAssembly module, the Ruby source dewasm generates from it, and the packaged gem.
+The next two are the one-time cost of loading that source, in time and in resident memory.
+The rest are per-call costs, one call of each function on a small diagram.
+
+Three facts hold whatever the magnitudes are.
+Resident memory after `require` is dominated by the instruction sequences of the loaded code, not by rendering, so it is paid once and does not grow with the number of calls.
+Each call allocates the module's linear memory, which holds the 4 MiB input buffer, the 8 MiB scratch arena, and the 4 MiB output buffer, and drops it when the call returns.
+Rendering is deterministic: two renders of the same source produce byte-identical SVGs, both with the default random source and with a fixed one.
+
+The numbers move with the pinned pozeiden commit and with the dewasm revision used to generate the module, so rerun `rake measure` after changing either.
+
 ## Tasks
 
 The Rakefile drives everything.
@@ -173,35 +203,24 @@ It needs `rake generate`, and a built gem in the checkout for the `.gem` row.
 Each timing it reports is a warmup call followed by the median of three measured runs; the sizes come from `File.size`, and the resident memory from `ps` on a child process that has just required the module.
 The measurement itself is `tools/measure.rb`, which can also be run directly as `ruby tools/measure.rb` when the build products are already in place, and which rewrites the same block.
 
-## Size, memory, and speed
+### `rake build`
 
-<!-- measurements:begin -->
-Measured on macOS 26.5.2, Apple M1 Pro, Ruby 4.0.4.
+```console
+$ rake build
+```
 
-| Quantity | Value |
-| --- | --- |
-| `wasm/pozeiden.wasm` after `wasm-opt -Oz` | 479 KB |
-| Generated `wasm_module.rb` | 2.6 MB |
-| Packaged `.gem` | 366 KB |
-| `require "dewasm/pozeiden"` | 381 ms |
-| Resident memory after `require` | 126.6 MB |
-| `render`, flowchart | 5.2 ms |
-| `render`, pie chart | 38 ms |
-| `render_with_metadata`, flowchart | 4.3 ms |
-| `detect_diagram_type` | 0.4 ms |
-<!-- measurements:end -->
+Packages the gem.
+It needs `rake generate`.
 
-The rows fall into three groups.
-The first ones are what ships: the WebAssembly module, the Ruby source dewasm generates from it, and the packaged gem.
-The next two are the one-time cost of loading that source, in time and in resident memory.
-The rest are per-call costs, one call of each function on a small diagram.
+### `rake clean`
 
-Three facts hold whatever the magnitudes are.
-Resident memory after `require` is dominated by the instruction sequences of the loaded code, not by rendering, so it is paid once and does not grow with the number of calls.
-Each call allocates the module's linear memory, which holds the 4 MiB input buffer, the 8 MiB scratch arena, and the 4 MiB output buffer, and drops it when the call returns.
-Rendering is deterministic: two renders of the same source produce byte-identical SVGs, both with the default random source and with a fixed one.
+```console
+$ rake clean
+```
 
-The numbers move with the pinned pozeiden commit and with the dewasm revision used to generate the module, so rerun `rake measure` after changing either.
+Removes the build products, `wasm/zig-out`, and `wasm/.zig-cache`.
+It needs nothing.
+
 
 ## License
 
