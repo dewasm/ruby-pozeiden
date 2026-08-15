@@ -49,6 +49,11 @@ task measure: :generate do
   sh RbConfig.ruby, "tools/measure.rb"
 end
 
+desc "Rewrite examples/flowchart.svg from the README's example diagram"
+task example_svg: :generate do
+  sh RbConfig.ruby, "tools/example_svg.rb"
+end
+
 desc "Build the gem"
 task build: :generate do
   sh "gem", "build", "dewasm-pozeiden.gemspec"

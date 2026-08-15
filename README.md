@@ -37,13 +37,16 @@ Render a diagram to an SVG string:
 require "dewasm/pozeiden"
 
 svg = Dewasm::Pozeiden.render(<<~MERMAID)
-  flowchart LR
-    A[Start] --> B{Choice}
-    B --> C[End]
+  flowchart TD
+    A[Commit] --> B{CI passes?}
+    B -->|Yes| C[Merge]
+    B -->|No| D[Fix]
 MERMAID
 
 File.write("flowchart.svg", svg)
 ```
+
+![The example flowchart rendered to SVG](examples/flowchart.svg)
 
 Unrecognised input renders pozeiden's fallback SVG and counts as success.
 Pass `strict: true` to get an error instead:
@@ -204,6 +207,16 @@ $ rake measure
 
 Refreshes the measurements table in `README.md` with numbers from this machine.
 It needs `rake generate`, and a built gem in the checkout for the `.gem` row.
+
+### `rake example_svg`
+
+```console
+$ rake example_svg
+```
+
+Rewrites `examples/flowchart.svg` from the README's example diagram.
+The test suite fails when the committed SVG no longer matches what this task writes.
+It needs `rake generate`.
 
 ### `rake build`
 
