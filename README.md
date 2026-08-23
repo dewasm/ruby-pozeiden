@@ -147,10 +147,10 @@ Measured on macOS 26.5.2, Apple M1 Pro, Ruby 4.0.4.
 | `wasm/pozeiden.wasm` after `wasm-opt -Oz` | 479 KB |
 | Generated `wasm_module.rb` | 2.3 MB |
 | Packaged `.gem` | 366 KB |
-| `require "dewasm/pozeiden"` | 266 ms |
-| Resident memory after `require` | 112.7 MB |
-| `render`, flowchart | 3.9 ms |
-| `render`, pie chart | 30 ms |
+| `require "dewasm/pozeiden"` | 262 ms |
+| Resident memory after `require` | 112.4 MB |
+| `render`, flowchart | 4.1 ms |
+| `render`, pie chart | 36 ms |
 | `render_with_metadata`, flowchart | 3.4 ms |
 | `detect_diagram_type` | 0.3 ms |
 <!-- measurements:end -->
