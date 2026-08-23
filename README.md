@@ -6,12 +6,12 @@
 **Mermaid** diagram rendering in **pure Ruby**.
 
 [pozeiden](https://github.com/sc2in/pozeiden) is a mermaid renderer written in Zig.
-This gem compiles it to `wasm32-wasi` and converts that WebAssembly module to Ruby source with [dewasm](https://github.com/dewasm/dewasm), so rendering runs on plain Ruby.
+This gem compiles it to `wasm` and converts that `wasm` module to Ruby source with [dewasm](https://github.com/dewasm/dewasm), so rendering runs on plain Ruby.
 There is *no browser*, *no native extension*, and *no wasm runtime* involved: the gem is Ruby code that a stock `ruby` executes.
 
 The gem is built from pozeiden 0.4.1 at commit `071fbbb85fb73a06994c163c6093123bd3ac11f6`.
 
-Seventeen diagram types are supported, the ones pozeiden implements: pie, flowchart, sequence, gitgraph, class, state, er, gantt, timeline, xychart, quadrant, mindmap, sankey, c4, block, requirement, and kanban.
+17 diagram types are supported, the ones pozeiden implements: pie, flowchart, sequence, gitgraph, class, state, er, gantt, timeline, xychart, quadrant, mindmap, sankey, c4, block, requirement, and kanban.
 
 > [!NOTE]
 > This gem **cannot be used commercially**: the rendering core derives from pozeiden, which is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE-POZEIDEN).
@@ -30,7 +30,7 @@ Or in `Gemfile`:
 gem "dewasm-pozeiden"
 ```
 
-Ruby 3.4 or newer is required, because the converted module stores WebAssembly linear memory in an `IO::Buffer`.
+Ruby 3.4 or newer is required.
 
 ## Usage
 
@@ -136,7 +136,7 @@ WebAssembly linear memory is not retained between calls, so no state carries ove
 ## How it is built
 
 `wasm/` is a self-contained Zig project: it depends on pozeiden pinned by commit in `wasm/build.zig.zon`, fetched by the Zig package manager into the gitignored `wasm/zig-pkg/`, and `wasm/src/shim.zig` is this project's own WebAssembly interface over pozeiden's public API, not upstream's playground shim.
-The module is built for `wasm32-wasi` in `ReleaseSmall`, single threaded, with the entry point disabled and `rdynamic` set, post-processed with `wasm-opt -Oz --enable-bulk-memory --enable-sign-ext --enable-nontrapping-float-to-int`, and converted to Ruby by dewasm at the revision recorded in `DEWASM_REVISION`.
+The module is built for `wasm32-wasi` in `ReleaseSmall`, single threaded, post-processed with `wasm-opt`, and converted to Ruby by `dewasm` at the revision recorded in `DEWASM_REVISION`.
 
 Neither build product is committed: `wasm/pozeiden.wasm` and `lib/dewasm/pozeiden/wasm_module.rb` are produced by the build, and the generated Ruby is shipped in the gem.
 
@@ -158,19 +158,11 @@ Measured on macOS 26.5.2, Apple M1 Pro, Ruby 4.0.4.
 | `detect_diagram_type` | 0.3 ms |
 <!-- measurements:end -->
 
-The rows fall into three groups.
-The first ones are what ships: the WebAssembly module, the Ruby source dewasm generates from it, and the packaged gem.
-The next two are the one-time cost of loading that source, in time and in resident memory.
-The rest are per-call costs, one call of each function on a small diagram.
-
-Three facts hold whatever the magnitudes are.
-Resident memory after `require` is dominated by the instruction sequences of the loaded code, not by rendering, so it is paid once and does not grow with the number of calls.
-Each call allocates the module's linear memory, which holds the 4 MiB input buffer, the 8 MiB scratch arena, and the 4 MiB output buffer, and drops it when the call returns.
-Rendering is deterministic: two renders of the same source produce byte-identical SVGs, both with the default random source and with a fixed one.
-
 The numbers move with the pinned pozeiden commit and with the dewasm revision used to generate the module, so rerun `rake measure` after changing either.
 
 ## Tasks
+
+<details>
 
 The Rakefile drives everything.
 `rake generate` does not build the WebAssembly module itself, so a clean checkout runs `rake wasm:build` first; from there `rake test` runs what it needs.
@@ -238,6 +230,8 @@ $ rake clean
 
 Removes the build products, `wasm/zig-out`, and `wasm/.zig-cache`.
 It needs nothing.
+
+</details>
 
 ## License
 
