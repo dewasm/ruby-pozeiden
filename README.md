@@ -136,7 +136,7 @@ WebAssembly linear memory is not retained between calls, so no state carries ove
 ## How it is built
 
 `wasm/` is a self-contained Zig project: it depends on pozeiden pinned by commit in `wasm/build.zig.zon`, fetched by the Zig package manager into the gitignored `wasm/zig-pkg/`, and `wasm/src/shim.zig` is this project's own WebAssembly interface over pozeiden's public API, not upstream's playground shim.
-The module is built for `wasm32-wasi` in `ReleaseSmall`, single threaded, post-processed with `wasm-opt`, and converted to Ruby by `dewasm` at the revision recorded in `DEWASM_REVISION`.
+The module is built for `wasm32-wasi` in `ReleaseSmall`, single threaded, post-processed with `wasm-opt`, and converted to Ruby by `dewasm`.
 
 Neither build product is committed: `wasm/pozeiden.wasm` and `lib/dewasm/pozeiden/wasm_module.rb` are produced by the build, and the generated Ruby is shipped in the gem.
 
