@@ -1,5 +1,8 @@
 # dewasm-pozeiden
 
+[![Test](https://github.com/dewasm/ruby-pozeiden/actions/workflows/test.yml/badge.svg)](https://github.com/dewasm/ruby-pozeiden/actions/workflows/test.yml)
+[![Gem](https://img.shields.io/gem/v/dewasm-pozeiden)](https://rubygems.org/gems/dewasm-pozeiden)
+
 **Mermaid** diagram rendering in **pure Ruby**.
 
 [pozeiden](https://github.com/sc2in/pozeiden) is a mermaid renderer written in Zig.
